@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartDining{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #2c3e50;
+            color: #ecf0f1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1rem;
+            color: #bdc3c7;
+        }
+        a {
+            text-decoration: none;
+            color: #3498db;
+        }
+        .message-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            background: #34495e;
+            color: #ecf0f1;
+        }
+    </style>
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <!-- Блок для сообщений -->
+    <div class="message-container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            {% else %}
+                <p>Добро пожаловать в SmartDining!</p>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Основной контент -->
+    {% block content %}
+    {% endblock %}
+</body>
+</html>
