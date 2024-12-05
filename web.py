@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, Response, flash
+import time
 
 class Web:
     def __init__(self, db, camera, face_auth):
@@ -31,22 +32,57 @@ class Web:
 
         @self.app.route('/login', methods=['GET', 'POST'])
         def login():
-            """Авторизация пользователя."""
+            """Авторизация пользователя через распознавание лица."""
             if request.method == 'POST':
-                username = request.form['username']
-                password = request.form['password']
-                self.log(f"Попытка авторизации: {username}")
-                if self.db.authenticate_user(username, password):
-                    self.log(f"Успешная авторизация: {username}")
-                    return redirect(url_for('face_scan'))
-                else:
-                    self.log(f"Неудачная авторизация: {username}")
-                    flash("Неверное имя пользователя или пароль.")
-                    return redirect(url_for('index'))  # Возвращаемся на главную страницу
+                # Получаем кадр с камеры
+                frame = self.camera.get_frame(RGB2=True)
+                if frame is None:
+                    self.log("Не удалось получить кадр с камеры.")
+                    flash("Не удалось получить кадр с камеры.")
+                    return redirect(url_for('index'))
+                
+                # Проверяем наличие лица на кадре
+                if not self.face_auth.detect_face(frame):
+                    self.log("Лицо на фотографии не обнаружено.")
+                    flash("Лицо на фотографии не обнаружено. Убедитесь, что ваше лицо видно.")
+                    return redirect(url_for('index'))
+                
+                # Извлекаем эмбеддинг лица
+                embedding = self.face_auth.get_embedding(frame)
+                if embedding is None:
+                    self.log("Не удалось извлечь эмбеддинг из кадра.")
+                    flash("Не удалось извлечь эмбеддинг из кадра. Попробуйте снова.")
+                    return redirect(url_for('index'))
+
+                # Получаем список всех пользователей
+                all_users = self.db.get_all_users()
+                if not all_users:
+                    self.log("В базе данных нет зарегистрированных пользователей.")
+                    flash("Нет зарегистрированных пользователей.")
+                    return redirect(url_for('index'))
+
+                # Проверяем эмбеддинги и фотографии пользователей
+                for user in all_users:
+                    if self.face_auth.compare_embeddings(embedding, user["embedding"]):
+                        self.log(f"Успешная авторизация по эмбеддингу: {user['username']}")
+                        flash(f"Добро пожаловать, {user['username']}!")
+                        return redirect(url_for('index'))
+                    elif self.face_auth.compare_photos(frame, user["photo"]):
+                        self.log(f"Успешная авторизация по фотографии: {user['username']}")
+                        flash(f"Добро пожаловать, {user['username']}!")
+                        return redirect(url_for('index'))
+
+                # Если совпадений не найдено
+                self.log("Пользователь не найден.")
+                flash("Пользователь не найден. Попробуйте снова.")
+                return redirect(url_for('index'))
+            else:
+                time.sleep(1)
             return render_template('login.html')  # Отображается только при GET-запросе
 
         @self.app.route('/register', methods=['GET', 'POST'])
         def register():
+            time.sleep(1)
             """Регистрация пользователя с использованием камеры."""
             if request.method == 'POST':
                 username = request.form['username']

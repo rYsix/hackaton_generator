@@ -60,27 +60,12 @@
     .face-frame.visible {
         opacity: 1; /* Стиль для видимой рамки */
     }
-    #loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1.5rem;
-        z-index: 9999;
-        display: none; /* Скрыто по умолчанию */
-    }
 </style>
 {% endblock %}
 
 {% block content %}
     <h1>Регистрация</h1>
-    <form id="registration-form" method="post" action="/register">
+    <form method="post" action="/register">
         <input type="text" id="username" name="username" placeholder="Имя пользователя" required>
         <div class="video-container">
             <img id="video-stream" src="/video_stream" alt="Поток с камеры" onload="showFaceFrame()">
@@ -91,21 +76,14 @@
         <a href="/">На главную</a>
     </form>
 
-    <div id="loading-overlay">Пожалуйста, подождите...</div>
-
     <script>
         function showFaceFrame() {
-            const delay = 500; 
+            const delay = 300; // 0.5 секунды
 
             setTimeout(() => {
                 const faceFrame = document.getElementById('face-frame');
                 faceFrame.classList.add('visible');
             }, delay);
         }
-
-        document.getElementById('registration-form').addEventListener('submit', function () {
-            const loadingOverlay = document.getElementById('loading-overlay');
-            loadingOverlay.style.display = 'flex';
-        });
     </script>
 {% endblock %}
