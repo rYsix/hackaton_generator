@@ -49,28 +49,36 @@ class Web:
             """Регистрация пользователя с использованием камеры."""
             if request.method == 'POST':
                 username = request.form['username']
-                password = request.form['password']
 
                 self.log(f"Попытка регистрации: {username}")
 
+                
+
+                if self.db.get_user_data(username):
+                    self.log(f"Ошибка регистрации: {username} уже существует.")
+                    return self.render_with_message('register.html', "Ошибка регистрации. Имя пользователя уже занято.", 400)
+
                 try:
-                    # Получаем кадр с камеры
                     frame = self.camera.get_frame(RGB2=True)
                     if frame is None:
-                        raise ValueError("Не удалось получить кадр с камеры.")
+                        self.log("Не удалось получить кадр с камеры.")
+                        return self.render_with_message('register.html', "Не удалось получить кадр с камеры.", 400)
 
-                    # Извлечение эмбеддинга из кадра
+                    if not self.face_auth.detect_face(frame):
+                        self.log("Лицо на фотографии не обнаружено.")
+                        return self.render_with_message('register.html', "Лицо на фотографии не обнаружено. Убедитесь, что ваше лицо видно.", 400)
+
                     embedding = self.face_auth.get_embedding(frame)
                     if embedding is None:
-                        raise ValueError("Не удалось извлечь эмбеддинг из кадра.")
+                        self.log("Не удалось извлечь эмбеддинг из кадра.")
+                        return self.render_with_message('register.html', "Не удалось извлечь эмбеддинг из кадра. Попробуйте снова.", 400)
 
-                    # Добавление пользователя в базу
-                    if self.db.add_user(username, password, embedding=embedding):
+                    if self.db.add_user(username, embedding=embedding, photo=frame):
                         self.log(f"Успешная регистрация: {username}")
                         return redirect(url_for('index'))
                     else:
                         self.log(f"Ошибка регистрации: {username} уже существует.")
-                        return self.render_with_message('index.html', "Ошибка регистрации. Имя пользователя уже занято.", 400)
+                        return self.render_with_message('register.html', "Ошибка регистрации. Имя пользователя уже занято.", 400)
 
                 except ValueError as e:
                     self.log(f"Ошибка регистрации: {e}")
@@ -81,6 +89,8 @@ class Web:
                     return self.render_with_message('register.html', "Произошла ошибка. Попробуйте позже.", 500)
 
             return self.render_with_message('register.html')
+
+
 
         @self.app.route('/face_scan')
         def face_scan():

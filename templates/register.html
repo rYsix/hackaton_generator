@@ -37,11 +37,12 @@
         position: relative;
         display: inline-block;
     }
-    img {
+    #video-stream {
         width: 300px;
         height: auto;
         border: 5px solid #2980b9;
         border-radius: 10px;
+        display: block;
     }
     .face-frame {
         position: absolute;
@@ -53,6 +54,11 @@
         border-radius: 50%;
         transform: translate(-50%, -50%);
         pointer-events: none;
+        opacity: 0; /* Изначально скрыта */
+        transition: opacity 1s ease-in-out; /* Плавный переход */
+    }
+    .face-frame.visible {
+        opacity: 1; /* Стиль для видимой рамки */
     }
 </style>
 {% endblock %}
@@ -61,12 +67,23 @@
     <h1>Регистрация</h1>
     <form method="post" action="/register">
         <input type="text" id="username" name="username" placeholder="Имя пользователя" required>
-        <input type="password" id="password" name="password" placeholder="Пароль" required>
         <div class="video-container">
-            <img src="/video_stream" alt="Поток с камеры">
-            <div class="face-frame"></div>
+            <img id="video-stream" src="/video_stream" alt="Поток с камеры" onload="showFaceFrame()">
+            <div id="face-frame" class="face-frame"></div>
         </div>
         <p>Для завершения регистрации смотрите в камеру и нажмите "Зарегистрироваться".</p>
         <button type="submit">Зарегистрироваться</button>
+        <a href="/">На главную</a>
     </form>
+
+    <script>
+        function showFaceFrame() {
+            const delay = 500; // 0.5 секунды
+
+            setTimeout(() => {
+                const faceFrame = document.getElementById('face-frame');
+                faceFrame.classList.add('visible');
+            }, delay);
+        }
+    </script>
 {% endblock %}

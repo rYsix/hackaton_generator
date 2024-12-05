@@ -1,8 +1,7 @@
 import pickle
-from sqlalchemy import create_engine, Column, Integer, String, inspect, LargeBinary
+from sqlalchemy import create_engine, Column, Integer, String, LargeBinary, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os
 
 Base = declarative_base()
 
@@ -11,8 +10,8 @@ class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(50), unique=True, nullable=False)
-    password = Column(String(100), nullable=False)  # Пароль должен быть захеширован
     embedding = Column(LargeBinary, nullable=False)  # Сериализованные данные эмбеддинга
+    photo = Column(LargeBinary, nullable=True)  # Сериализованное изображение в формате numpy array
 
 
 class Database:
@@ -24,43 +23,35 @@ class Database:
         self._initialize_database()
 
     def _initialize_database(self):
-        """Проверяет наличие файла базы данных и создаёт таблицы, если нужно."""
-        if not os.path.exists(self.db_file):
-            print("[LOG DB] Файл базы данных не найден. Создаём новую базу данных...")
-            self._create_database()
-        else:
-            print("[LOG DB] Файл базы данных найден. Проверяем таблицы...")
-            self._check_and_create_tables()
-
-    def _create_database(self):
-        """Создаёт файл базы данных и все таблицы."""
-        Base.metadata.create_all(self.engine)
-        print("[LOG DB] База данных и таблицы успешно созданы.")
-
-    def _check_and_create_tables(self):
-        """Проверяет наличие таблиц и создаёт недостающие."""
+        """Проверяет наличие базы данных и создаёт таблицы, если нужно."""
         inspector = inspect(self.engine)
-        existing_tables = inspector.get_table_names()
-        expected_tables = Base.metadata.tables.keys()
+        if not inspector.has_table(User.__tablename__):
+            print("[LOG DB] Таблицы не найдены. Создаём базу данных...")
+            Base.metadata.create_all(self.engine)
+            print("[LOG DB] База данных и таблицы успешно созданы.")
+        else:
+            print("[LOG DB] Таблицы уже существуют. Инициализация завершена.")
 
-        for table in expected_tables:
-            if table not in existing_tables:
-                print(f"[LOG DB] Таблица '{table}' не найдена. Создаём...")
-                Base.metadata.tables[table].create(self.engine)
-            else:
-                print(f"[LOG DB] Таблица '{table}' существует.")
-
-    def add_user(self, username, password, embedding=None):
-        """Добавление нового пользователя."""
+    def add_user(self, username, embedding=None, photo=None):
+        """
+        Добавление нового пользователя с фото.
+        Аргументы:
+            username (str): Имя пользователя.
+            embedding (list/array): Эмбеддинг лица.
+            photo (numpy.ndarray): Фото пользователя в формате numpy array.
+        """
         if embedding is None:
             raise ValueError("[ОШИБКА DB] Эмбеддинг обязателен для добавления пользователя.")
 
         # Сериализация эмбеддинга
         serialized_embedding = pickle.dumps(embedding)
 
+        # Сериализация фото
+        serialized_photo = pickle.dumps(photo) if photo is not None else None
+
         session = self.Session()
         try:
-            user = User(username=username, password=password, embedding=serialized_embedding)
+            user = User(username=username, embedding=serialized_embedding, photo=serialized_photo)
             session.add(user)
             session.commit()
             print(f"[LOG DB] Пользователь '{username}' успешно добавлен.")
@@ -72,41 +63,74 @@ class Database:
             session.close()
         return True
 
-    def get_user_embedding(self, username):
-        """Получение эмбеддинга пользователя."""
-        session = self.Session()
-        try:
-            user = session.query(User).filter_by(username=username).first()
-            if user and user.embedding:
-                # Десериализация эмбеддинга
-                return pickle.loads(user.embedding)
-            else:
-                print(f"[LOG DB] Эмбеддинг для пользователя '{username}' не найден.")
-                return None
-        except Exception as e:
-            print(f"[ОШИБКА DB] Не удалось получить эмбеддинг для пользователя '{username}': {e}")
-        finally:
-            session.close()
-        return None
-
-    def update_user_embedding(self, username, embedding):
-        """Обновление эмбеддинга пользователя."""
+    def get_user_data(self, username):
+        """
+        Получение данных пользователя.
+        Аргументы:
+            username (str): Имя пользователя.
+        Возвращает:
+            dict: Содержит username, десериализованный эмбеддинг и фото (numpy array).
+        """
         session = self.Session()
         try:
             user = session.query(User).filter_by(username=username).first()
             if user:
-                # Сериализация эмбеддинга
-                serialized_embedding = pickle.dumps(embedding)
-                user.embedding = serialized_embedding
-                session.commit()
-                print(f"[LOG DB] Эмбеддинг пользователя '{username}' успешно обновлён.")
-                return True
+                embedding = pickle.loads(user.embedding) if user.embedding else None
+                photo = pickle.loads(user.photo) if user.photo else None
+                return {"username": user.username, "embedding": embedding, "photo": photo}
             else:
                 print(f"[LOG DB] Пользователь '{username}' не найден.")
-                return False
+                return None
         except Exception as e:
-            session.rollback()
-            print(f"[ОШИБКА DB] Не удалось обновить эмбеддинг для пользователя '{username}': {e}")
+            print(f"[ОШИБКА DB] Не удалось получить данные пользователя '{username}': {e}")
         finally:
             session.close()
-        return False
+
+    def get_all_users(self):
+        """
+        Возвращает всех пользователей в виде списка словарей.
+        Возвращает:
+            list[dict]: Список пользователей с их данными.
+        """
+        session = self.Session()
+        try:
+            users = session.query(User).all()
+            user_data_list = []
+            for user in users:
+                user_data_list.append({
+                    "id": user.id,
+                    "username": user.username,
+                    "embedding": pickle.loads(user.embedding) if user.embedding else None,
+                    "photo": pickle.loads(user.photo) if user.photo else None
+                })
+            return user_data_list
+        except Exception as e:
+            print(f"[ОШИБКА DB] Не удалось получить список пользователей: {e}")
+            return []
+        finally:
+            session.close()
+
+    def delete_user(self, username):
+        """
+        Удаление пользователя по имени.
+        Аргументы:
+            username (str): Имя пользователя.
+        Возвращает:
+            bool: True, если пользователь успешно удалён, иначе False.
+        """
+        session = self.Session()
+        try:
+            user = session.query(User).filter_by(username=username).first()
+            if not user:
+                print(f"[LOG DB] Пользователь '{username}' не найден.")
+                return False
+            session.delete(user)
+            session.commit()
+            print(f"[LOG DB] Пользователь '{username}' успешно удалён.")
+            return True
+        except Exception as e:
+            session.rollback()
+            print(f"[ОШИБКА DB] Не удалось удалить пользователя '{username}': {e}")
+            return False
+        finally:
+            session.close()
