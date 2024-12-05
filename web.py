@@ -27,7 +27,7 @@ class Web:
         def index():
             """Главная страница с кнопками."""
             self.log("Главная страница загружена.")
-            return self.render_with_message('index.html')
+            return render_template('index.html')  # Главная страница без редиректов
 
         @self.app.route('/login', methods=['GET', 'POST'])
         def login():
@@ -41,95 +41,71 @@ class Web:
                     return redirect(url_for('face_scan'))
                 else:
                     self.log(f"Неудачная авторизация: {username}")
-                    return self.render_with_message('login.html', "Неверное имя пользователя или пароль.", 401)
-            return self.render_with_message('login.html')
+                    flash("Неверное имя пользователя или пароль.")
+                    return redirect(url_for('index'))  # Возвращаемся на главную страницу
+            return render_template('login.html')  # Отображается только при GET-запросе
 
         @self.app.route('/register', methods=['GET', 'POST'])
         def register():
             """Регистрация пользователя с использованием камеры."""
             if request.method == 'POST':
                 username = request.form['username']
-
                 self.log(f"Попытка регистрации: {username}")
-
-                
 
                 if self.db.get_user_data(username):
                     self.log(f"Ошибка регистрации: {username} уже существует.")
-                    return self.render_with_message('register.html', "Ошибка регистрации. Имя пользователя уже занято.", 400)
+                    flash("Имя пользователя уже занято.")
+                    return redirect(url_for('index'))  # Возвращаемся на главную страницу
 
                 try:
                     frame = self.camera.get_frame(RGB2=True)
                     if frame is None:
                         self.log("Не удалось получить кадр с камеры.")
-                        return self.render_with_message('register.html', "Не удалось получить кадр с камеры.", 400)
+                        flash("Не удалось получить кадр с камеры.")
+                        return redirect(url_for('index'))
 
                     if not self.face_auth.detect_face(frame):
                         self.log("Лицо на фотографии не обнаружено.")
-                        return self.render_with_message('register.html', "Лицо на фотографии не обнаружено. Убедитесь, что ваше лицо видно.", 400)
+                        flash("Лицо на фотографии не обнаружено. Убедитесь, что ваше лицо видно.")
+                        return redirect(url_for('index'))
 
                     embedding = self.face_auth.get_embedding(frame)
                     if embedding is None:
                         self.log("Не удалось извлечь эмбеддинг из кадра.")
-                        return self.render_with_message('register.html', "Не удалось извлечь эмбеддинг из кадра. Попробуйте снова.", 400)
+                        flash("Не удалось извлечь эмбеддинг из кадра. Попробуйте снова.")
+                        return redirect(url_for('index'))
 
                     if self.db.add_user(username, embedding=embedding, photo=frame):
                         self.log(f"Успешная регистрация: {username}")
+                        flash("Регистрация успешна!")
                         return redirect(url_for('index'))
                     else:
                         self.log(f"Ошибка регистрации: {username} уже существует.")
-                        return self.render_with_message('register.html', "Ошибка регистрации. Имя пользователя уже занято.", 400)
+                        flash("Ошибка регистрации. Имя пользователя уже занято.")
+                        return redirect(url_for('index'))
 
                 except ValueError as e:
                     self.log(f"Ошибка регистрации: {e}")
-                    return self.render_with_message('register.html', str(e), 400)
+                    flash(str(e))
+                    return redirect(url_for('index'))
 
                 except Exception as e:
                     self.log(f"Неизвестная ошибка: {e}")
-                    return self.render_with_message('register.html', "Произошла ошибка. Попробуйте позже.", 500)
+                    flash("Произошла ошибка. Попробуйте позже.")
+                    return redirect(url_for('index'))
 
-            return self.render_with_message('register.html')
-
-
-
-        @self.app.route('/face_scan')
-        def face_scan():
-            """Показ потока с камеры."""
-            self.log("Страница сканирования лица загружена.")
-            return self.render_with_message('face_scan.html')
+            return render_template('register.html')  # Отображается только при GET-запросе
 
         @self.app.route('/video_stream')
         def video_stream():
             """Генерация видеопотока с камеры."""
             self.log("Генерация видеопотока началась.")
-            return Response(self.camera.generate_video_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-        @self.app.route('/authenticate_face', methods=['POST'])
-        def authenticate_face():
-            """Авторизация с помощью распознавания лица."""
-            image_path = request.files['face_image'].filename
-            self.log(f"Получено изображение для авторизации: {image_path}")
-
-            embedding = self.face_auth.get_embedding(image_path)
-
-            if embedding is None:
-                self.log(f"Не удалось обработать изображение: {image_path}")
-                return self.render_with_message('face_scan.html', "Ошибка обработки изображения.", 400)
-
-            user_embedding = self.db.get_user_embedding(request.form['username'])
-
-            if not user_embedding:
-                self.log(f"Эмбеддинг пользователя не найден: {request.form['username']}")
-                return self.render_with_message('face_scan.html', "Эмбеддинг пользователя не найден.", 404)
-
-            if self.face_auth.compare_embeddings(embedding, user_embedding):
-                self.log(f"Успешная аутентификация лица для пользователя: {request.form['username']}")
-                return self.render_with_message('face_scan.html', "Аутентификация лица успешна!", 200)
-            else:
-                self.log(f"Аутентификация лица неудачна для пользователя: {request.form['username']}")
-                return self.render_with_message('face_scan.html', "Аутентификация лица не удалась.", 401)
+            return Response(
+                self.camera.generate_video_stream(),
+                mimetype='multipart/x-mixed-replace; boundary=frame'
+            )
 
     def run(self):
         """Запуск Flask-приложения."""
         self.log("Запуск Flask-сервера...")
-        self.app.run(host='0.0.0.0', port=5000, debug=True)
+        self.app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
