@@ -1,0 +1,52 @@
+{% extends "menu/base.html" %}
+
+{% block title %}Меню{% endblock %}
+
+{% block styles %}
+<style>
+    .menu-wrapper {
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        height: calc(100vh - 100px); text-align: center;
+    }
+    .menu-container {
+        display: flex; justify-content: center; align-items: center; gap: 30px; padding: 20px;
+    }
+    .menu-item {
+        background: #34495e; padding: 20px; border-radius: 10px; border: 2px solid #3498db;
+        width: 250px; height: 200px; text-align: center; transition: transform 0.3s, background 0.3s;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        text-decoration: none; color: inherit;
+    }
+    .menu-item:hover {
+        transform: scale(1.05); background: #2980b9;
+    }
+    .menu-item h3 {
+        margin: 10px 0; font-size: 1.5rem; color: #ecf0f1;
+    }
+    .menu-item p {
+        font-size: 0.9rem; color: #bdc3c7;
+    }
+    .menu-item i {
+        font-size: 2rem; margin-bottom: 10px; color: #ecf0f1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="menu-wrapper">
+    <h1 style="text-align: center;">Добро пожаловать в DmartDining!</h1>
+    <div class="menu-container">
+        <a href="#" class="menu-item" onclick="alert('Сканирование подноса!')">
+            <i class="fa fa-camera"></i>
+            <h3>Сканировать поднос</h3>
+            <p>Используйте эту функцию для быстрого обслуживания.</p>
+        </a>
+
+        <a href="/menu/online" class="menu-item">
+            <i class="fa fa-cutlery"></i>
+            <h3>Сделать заказ online</h3>
+            <p>Выберите из нашего меню на сайте.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

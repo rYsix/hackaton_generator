@@ -1,0 +1,159 @@
+{% extends "menu/base.html" %}
+
+{% block title %}История заказов{% endblock %}
+
+{% block styles %}
+<style>
+    .orders-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .orders-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+        width: 100%;
+    }
+    .order-card {
+        background: #34495e;
+        padding: 20px;
+        border-radius: 10px;
+        border: 2px solid #3498db;
+        width: 100%;
+        color: #ecf0f1;
+        box-sizing: border-box;
+        max-width: 600px;
+    }
+    .order-card h3 {
+        margin-top: 0;
+        color: #ecf0f1;
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+    }
+    .order-card table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .order-card table th, .order-card table td {
+        padding: 10px;
+        text-align: left;
+        color: #bdc3c7;
+        border-bottom: 1px solid #2c3e50;
+    }
+    .order-card .total-price {
+        font-weight: bold;
+        color: #ecf0f1;
+        text-align: right;
+        margin-top: 10px;
+    }
+    .order-card .date {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="orders-wrapper">
+    <h1 style="text-align: center;">История заказов</h1>
+    <div class="orders-container">
+        <!-- Карточка заказа 1 -->
+        <div class="order-card">
+            <h3>Заказ #1</h3>
+            <table>
+                <tr>
+                    <th>Наименование</th>
+                    <th>Кол-во</th>
+                    <th>Цена</th>
+                </tr>
+                <tr>
+                    <td>Булочка</td>
+                    <td>x2</td>
+                    <td>1200 тг</td>
+                </tr>
+                <tr>
+                    <td>Салат</td>
+                    <td>x1</td>
+                    <td>500 тг</td>
+                </tr>
+                <tr>
+                    <td>Напиток</td>
+                    <td>x1</td>
+                    <td>300 тг</td>
+                </tr>
+                <tr>
+                    <td>Горячее</td>
+                    <td>x1</td>
+                    <td>800 тг</td>
+                </tr>
+            </table>
+            <p class="total-price">Итого: 2800 тг</p>
+            <p class="date">Дата: 10.12.2024</p>
+        </div>
+
+        <!-- Карточка заказа 2 -->
+        <div class="order-card">
+            <h3>Заказ #2</h3>
+            <table>
+                <tr>
+                    <th>Наименование</th>
+                    <th>Кол-во</th>
+                    <th>Цена</th>
+                </tr>
+                <tr>
+                    <td>Суп</td>
+                    <td>x1</td>
+                    <td>600 тг</td>
+                </tr>
+                <tr>
+                    <td>Булочка</td>
+                    <td>x1</td>
+                    <td>600 тг</td>
+                </tr>
+                <tr>
+                    <td>Напиток</td>
+                    <td>x2</td>
+                    <td>600 тг</td>
+                </tr>
+            </table>
+            <p class="total-price">Итого: 1800 тг</p>
+            <p class="date">Дата: 08.12.2024</p>
+        </div>
+
+        <!-- Карточка заказа 3 -->
+        <div class="order-card">
+            <h3>Заказ #3</h3>
+            <table>
+                <tr>
+                    <th>Наименование</th>
+                    <th>Кол-во</th>
+                    <th>Цена</th>
+                </tr>
+                <tr>
+                    <td>Горячее</td>
+                    <td>x1</td>
+                    <td>800 тг</td>
+                </tr>
+                <tr>
+                    <td>Салат</td>
+                    <td>x1</td>
+                    <td>500 тг</td>
+                </tr>
+                <tr>
+                    <td>Десерт</td>
+                    <td>x1</td>
+                    <td>400 тг</td>
+                </tr>
+            </table>
+            <p class="total-price">Итого: 1700 тг</p>
+            <p class="date">Дата: 05.12.2024</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

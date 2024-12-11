@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartDining{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #2c3e50;
+            color: #ecf0f1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            opacity: 0; /* Изначально скрыт для плавного появления */
+            transition: opacity 1s ease-in-out; /* Плавный переход */
+        }
+        body.loaded {
+            opacity: 1; /* Видим при загрузке страницы */
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1rem;
+            color: #bdc3c7;
+        }
+        a {
+            text-decoration: none;
+            color: #3498db;
+        }
+        .message-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            background: #34495e;
+            color: #ecf0f1;
+        }
+        /* Стили экрана загрузки */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(44, 62, 80, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+            visibility: visible;
+        }
+        #loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        #loading-overlay p {
+            font-size: 1.5rem;
+            color: #ecf0f1;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        {% block styles %}{% endblock %}
+    </style>
+</head>
+<body>
+    <!-- Экран загрузки -->
+    <div id="loading-overlay">
+        <p>Пожалуйста, подождите...</p>
+    </div>
+
+    <!-- Блок для сообщений -->
+    <div class="message-container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            {% else %}
+                <p>Добро пожаловать в SmartDining!</p>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const body = document.body;
+
+            const fakeDelay = 200;
+
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+                body.classList.add('loaded');
+            }, fakeDelay);
+        });
+    </script>
+</body>
+</html>

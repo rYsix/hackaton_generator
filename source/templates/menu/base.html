@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartDining{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #2c3e50;
+            color: #ecf0f1;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: #34495e;
+            border-bottom: 2px solid #3498db;
+        }
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #ecf0f1;
+        }
+        .navbar a {
+            text-decoration: none;
+            color: #3498db;
+            font-size: 1rem;
+            margin-left: 15px;
+            transition: color 0.3s;
+        }
+        .navbar a:hover {
+            color: #ecf0f1;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #34495e;
+            border-top: 2px solid #3498db;
+            color: #ecf0f1;
+        }
+
+        /* Notification block */
+        .message-container {
+            padding: 15px;
+            background: #34495e;
+            color: #ecf0f1;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            margin: 10px 20px;
+            text-align: center;
+        }
+
+        {% block styles %}{% endblock %}
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>SmartDining</h1>
+        <div>
+            <a href="/menu/menu">Главная</a>
+            <a href="/menu/history">История заказов</a>
+            <a href="/profile">{{ username }}</a>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    {% if get_flashed_messages() %}
+    <div class="message-container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div style="min-height: 80vh;">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer style="margin-top: 2cm;">
+        &copy; 2024 SmartDining. Все права защищены.
+    </footer>
+</body>
+</html>

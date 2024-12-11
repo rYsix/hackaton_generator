@@ -1,0 +1,94 @@
+<!-- Подключаем Bootstrap CSS и JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- HTML шаблон как раньше -->
+{% extends "menu/base.html" %}
+{% block title %}Online Меню{% endblock %}
+{% block styles %}
+<style>
+    /* Комменты на сленге: тут чутка стилизуем, аккуратно, чтоб было красиво */
+    .menu-wrapper {
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        min-height: 100vh; padding: 20px; box-sizing: border-box;
+    }
+    .menu-container {
+        display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 30px;
+    }
+    .menu-card {
+        background: #34495e; padding: 20px; border-radius: 10px; border: 2px solid #3498db;
+        width: 150px; height: 150px; text-align: center; color: #ecf0f1; transition: transform 0.3s, background 0.3s;
+        display: flex; flex-direction: column; justify-content: center; align-items: center; text-decoration: none;
+        cursor: pointer;
+    }
+    .menu-card:hover {
+        transform: scale(1.05); background: #2980b9;
+    }
+    .menu-card i { font-size: 2.5rem; margin-bottom: 10px; color: #ecf0f1; }
+    .menu-card h3 { margin: 0; font-size: 1.2rem; color: #ecf0f1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="menu-wrapper">
+    <h1 style="text-align: center;">Online Меню</h1>
+    <div class="menu-container">
+        <a href="#" class="menu-card"><i class="fa fa-cutlery"></i><h3>Бургеры</h3></a>
+        <a href="#" class="menu-card"><i class="fa fa-birthday-cake"></i><h3>Десерты</h3></a>
+        <a href="#" class="menu-card"><i class="fa fa-coffee"></i><h3>Напитки</h3></a>
+        <a href="#" class="menu-card"><i class="fa fa-leaf"></i><h3>Салаты</h3></a>
+        <a href="#" class="menu-card"><i class="fa fa-pie-chart"></i><h3>Выпечка</h3></a>
+    </div>
+</div>
+
+<!-- Модалка: тут показываем QR и кнопку заказать -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true" style="color: black;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <!-- Тут хедер для названия -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="categoryTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center" style="display: flex; flex-direction: column; align-items: center;">
+        <img id="qrCode" alt="QR Code" style="max-width:200px; margin-bottom:20px; display:none;">
+        <button id="orderButton" class="btn btn-primary">Заказать</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const menuCards = document.querySelectorAll(".menu-card");
+        const modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+        const categoryTitle = document.getElementById("categoryTitle");
+        const qrCode = document.getElementById("qrCode");
+        const orderButton = document.getElementById("orderButton");
+
+        menuCards.forEach(card => {
+            card.addEventListener("click", async function () {
+                try {
+                    const title = this.querySelector("h3").innerText;
+                    categoryTitle.textContent = `Оплата (kaspiQR). Вы выбрали: ${title}`;
+
+                    // Тут уязвимость: внешний API без проверок и хэндлинга ошибок сети
+                    const qrData = encodeURIComponent(`Заказ: ${title}`);
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}`;
+                    
+                    qrCode.src = qrUrl;
+                    qrCode.style.display = "block";
+
+                    orderButton.onclick = () => {
+                        alert(`Заказ для категории "${title}" принят!`);
+                    };
+
+                    modal.show();
+                } catch (err) {
+                    console.error("Ошибка при загрузке QR:", err); // узкое место: нет fallback, нет UI для ошибок
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
